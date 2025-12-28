@@ -1,0 +1,159 @@
+{
+  "timestamp": "2025-12-28T05:52:58.748Z",
+  "summary": {
+    "totalTests": 20,
+    "passed": 19,
+    "failed": 1,
+    "successRate": 95
+  },
+  "categories": {
+    "database": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Database Connection",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.622Z"
+        },
+        {
+          "name": "Basic Database Operations",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.670Z"
+        },
+        {
+          "name": "Database Statistics Access",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.685Z"
+        }
+      ]
+    },
+    "models": {
+      "passed": 6,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "User Model Validation",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.702Z"
+        },
+        {
+          "name": "User Model Virtuals",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.702Z"
+        },
+        {
+          "name": "Guest Model Validation",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.704Z"
+        },
+        {
+          "name": "Guest Model Methods",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.705Z"
+        },
+        {
+          "name": "Incident Model Validation",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.708Z"
+        },
+        {
+          "name": "Incident Model Methods",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.709Z"
+        }
+      ]
+    },
+    "indexes": {
+      "passed": 4,
+      "failed": 1,
+      "tests": [
+        {
+          "name": "Index Listing",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.719Z"
+        },
+        {
+          "name": "Critical Index Validation",
+          "passed": false,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.727Z"
+        },
+        {
+          "name": "users Collection Indexes",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.730Z"
+        },
+        {
+          "name": "guests Collection Indexes",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.731Z"
+        },
+        {
+          "name": "incidents Collection Indexes",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.733Z"
+        }
+      ]
+    },
+    "middleware": {
+      "passed": 6,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "JWT Token Generation",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.738Z"
+        },
+        {
+          "name": "Rate Limiter Configuration",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.739Z"
+        },
+        {
+          "name": "Validator Configuration",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.739Z"
+        },
+        {
+          "name": "Role Checker Configuration",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.739Z"
+        },
+        {
+          "name": "Permission Logic",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.739Z"
+        },
+        {
+          "name": "Model-Index Integration",
+          "passed": true,
+          "error": null,
+          "timestamp": "2025-12-28T05:52:58.741Z"
+        }
+      ]
+    },
+    "overall": {
+      "passed": 19,
+      "failed": 1
+    }
+  }
+}
