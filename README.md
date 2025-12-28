@@ -1,217 +1,231 @@
 # Emergency Incident Reporting Platform
 
-A comprehensive Node.js backend system for emergency incident reporting and management with geolocation support, role-based access control, and robust security measures.
+A comprehensive full-stack emergency incident reporting system that connects citizens with first responders through real-time incident reporting, geolocation services, and multi-role authentication.
 
 ## 🚨 Features
 
-- **User Management**: Complete user registration with medical profiles and emergency contacts
-- **Guest Access**: Anonymous reporting with action limits
-- **Incident Reporting**: Geolocation-based emergency incident reporting
-- **Role-Based Access**: Multi-level permissions (guest, user, admin, hospital)
-- **Geospatial Queries**: Location-based incident searching and filtering
-- **Security**: Rate limiting, input validation, data encryption
-- **Real-time Updates**: Incident status tracking and upvoting system
+- **Multi-Role Authentication**: Support for Citizens, Police, Hospital staff, and Administrators
+- **Real-time Incident Reporting**: Fast emergency reporting with media uploads
+- **Geolocation Services**: GPS tracking and proximity detection
+- **Dark Theme UI**: Modern, professional interface optimized for emergency situations
+- **Secure Data Handling**: End-to-end encryption and role-based access control
+- **Mobile Responsive**: Works seamlessly on desktop, tablet, and mobile devices
 
-## 🛠 Tech Stack
+## 🏗️ Architecture
 
-- **Runtime**: Node.js (LTS)
-- **Framework**: Express.js 4.x
-- **Database**: MongoDB with Mongoose ODM
-- **Security**: Helmet, CORS, express-rate-limit
-- **Validation**: Joi
-- **Encryption**: bcrypt, crypto
-- **Testing**: Jest, Supertest, fast-check
+### Frontend
+- **React 19** with Vite build tool
+- **Tailwind CSS v4** for modern styling
+- **React Router** for client-side navigation
+- **Axios** for API communication
+- **Cloudinary** for media management
+- **Google Maps** integration for location services
 
-## 📋 Prerequisites
-
-- Node.js (v18.0.0 or higher)
-- MongoDB (v5.0 or higher)
-- npm or yarn package manager
+### Backend
+- **Node.js** with Express.js framework
+- **MongoDB** with Mongoose ODM
+- **JWT** authentication system
+- **Cloudinary** for media storage
+- **Comprehensive security** with Helmet, CORS, rate limiting
 
 ## 🚀 Quick Start
 
-### 1. Clone and Install
+### Prerequisites
+- Node.js (LTS version)
+- MongoDB (local or Atlas)
+- Git
 
-```bash
-git clone <repository-url>
-cd emergency-incident-platform
-npm install
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Venomv252/dh-full.git
+   cd dh-full
+   ```
+
+2. **Install backend dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Install frontend dependencies**
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+4. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+5. **Start the development servers**
+   
+   **Backend:**
+   ```bash
+   npm run dev
+   ```
+   
+   **Frontend (in a new terminal):**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+## 🎯 Current Implementation Status
+
+### ✅ Completed Features
+
+#### Backend Infrastructure
+- [x] **Project Setup**: Complete Node.js/Express backend with MongoDB
+- [x] **Database Models**: User, Guest, Incident, and AuditLog models with encryption
+- [x] **Authentication System**: JWT-based authentication with role management
+- [x] **Security Middleware**: Rate limiting, validation, and access control
+- [x] **External Integrations**: Cloudinary and Google Maps services
+- [x] **Property-Based Testing**: Comprehensive test suite with fast-check
+
+#### Frontend Application
+- [x] **Landing Page**: Professional dark theme with role-based login options
+- [x] **React Setup**: Modern React 19 with Vite and Tailwind CSS v4
+- [x] **Responsive Design**: Mobile-first responsive layout
+- [x] **Component Architecture**: Organized component structure with routing
+
+### 🚧 In Development
+- [ ] Authentication forms and user registration
+- [ ] Incident reporting interface with media upload
+- [ ] Interactive maps with location selection
+- [ ] Role-specific dashboards (Police, Hospital, Admin)
+- [ ] Real-time notifications and updates
+
+## 📁 Project Structure
+
 ```
-
-### 2. Environment Setup
-
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-### 3. Start MongoDB
-
-```bash
-# Using MongoDB service
-sudo systemctl start mongod
-
-# Or using Docker
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-```
-
-### 4. Run the Application
-
-```bash
-# Development mode with auto-reload
-npm run dev
-
-# Production mode
-npm start
-```
-
-### 5. Verify Installation
-
-Visit `http://localhost:3000/health` to confirm the API is running.
-
-## 📚 API Documentation
-
-### Base URL
-```
-http://localhost:3000/api
-```
-
-### Endpoints (To be implemented)
-
-- `POST /api/guest/create` - Create guest user
-- `POST /api/user/register` - Register new user
-- `POST /api/incidents` - Report new incident
-- `GET /api/incidents` - List incidents with filtering
-- `GET /api/incidents/:id` - Get incident details
-- `POST /api/incidents/:id/upvote` - Upvote incident
-- `GET /api/admin/incidents` - Admin incident management
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Generate coverage report
-npm run test:coverage
-```
-
-## 🏗 Project Structure
-
-```
-src/
-├── controllers/     # Business logic handlers
-├── models/         # Mongoose schemas and models
-├── routes/         # API route definitions
-├── middleware/     # Custom middleware functions
-├── config/         # Configuration files
-├── utils/          # Utility functions
-└── app.js          # Main application file
+dh-full/
+├── frontend/                 # React frontend application
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── pages/          # Route-based page components
+│   │   ├── services/       # API service functions
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── context/        # React Context providers
+│   │   └── utils/          # Utility functions
+│   └── package.json
+├── src/                     # Backend source code
+│   ├── controllers/        # Business logic handlers
+│   ├── models/            # Database models and schemas
+│   ├── routes/            # API route definitions
+│   ├── middleware/        # Custom middleware functions
+│   ├── services/          # External service integrations
+│   ├── config/            # Configuration files
+│   └── utils/             # Utility functions
+├── tests/                  # Test suites
+│   ├── property/          # Property-based tests
+│   ├── unit/              # Unit tests
+│   └── utils/             # Test utilities
+├── .kiro/                 # Kiro AI specifications
+│   └── specs/             # Feature specifications and tasks
+└── docs/                  # Documentation
 ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
+Create a `.env` file in the root directory:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment mode | `development` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/emergency-incident-platform` |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `ENCRYPTION_KEY` | Data encryption key | Required |
+```env
+# Database
+MONGODB_URI=mongodb://localhost:27017/emergency-platform
+MONGODB_TEST_URI=mongodb://localhost:27017/emergency-platform-test
 
-### Security Configuration
+# JWT
+JWT_SECRET=your-super-secret-jwt-key
+JWT_REFRESH_SECRET=your-refresh-secret-key
 
-- **Rate Limiting**: Different limits for guest/user/admin roles
-- **CORS**: Configurable allowed origins
-- **Helmet**: Security headers enabled
-- **Input Validation**: Joi schema validation
-- **Data Encryption**: Sensitive field encryption
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 
-## 🔒 Security Features
+# Google Maps
+GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 
-- JWT-based authentication (prepared)
-- Role-based access control
-- Rate limiting by user type
-- Input sanitization and validation
-- Sensitive data encryption
-- Security headers (Helmet.js)
-- CORS protection
+# Encryption
+ENCRYPTION_KEY=your-32-byte-hex-encryption-key
 
-## 📊 Database Schema
+# Server
+PORT=3000
+NODE_ENV=development
+```
 
-### User Model
-- Personal information with encryption
-- Medical details and emergency contacts
-- Vehicle and insurance information
-- Role-based permissions
+## 🧪 Testing
 
-### Guest Model
-- Auto-generated guest IDs
-- Action count tracking
-- Session management
+The project includes comprehensive testing with both unit tests and property-based tests:
 
-### Incident Model
-- GeoJSON location data
-- Media attachments
-- Status tracking and upvoting
-- Reporter attribution
+```bash
+# Run all tests
+npm test
+
+# Run property-based tests
+npm run test:property
+
+# Run unit tests
+npm run test:unit
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+## 📋 Development Workflow
+
+This project follows a specification-driven development approach using Kiro AI:
+
+1. **Requirements**: Detailed user stories and acceptance criteria
+2. **Design**: Comprehensive system architecture and component design
+3. **Tasks**: Actionable implementation tasks with property-based testing
+4. **Implementation**: Incremental development with continuous testing
+
+View the complete specifications in `.kiro/specs/emergency-incident-platform/`
 
 ## 🚀 Deployment
 
-### Production Checklist
+### Production Build
 
-- [ ] Set strong JWT_SECRET and ENCRYPTION_KEY
-- [ ] Configure production MongoDB URI
-- [ ] Set NODE_ENV=production
-- [ ] Configure proper CORS origins
-- [ ] Set up SSL/TLS certificates
-- [ ] Configure reverse proxy (nginx)
-- [ ] Set up monitoring and logging
-- [ ] Configure backup strategy
+**Frontend:**
+```bash
+cd frontend
+npm run build
+```
+
+**Backend:**
+```bash
+npm run build  # If build script exists
+```
+
+### Docker Support
+Docker configuration files will be added in future updates.
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🆘 Emergency Notice
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the API endpoints
+**This is a development project. For actual emergencies, always call your local emergency services immediately.**
 
-## 🔄 Development Status
+## 📞 Support
 
-This project is currently in active development. Core infrastructure is complete, and features are being implemented incrementally following the MVC architecture pattern.
+For questions and support, please open an issue on GitHub or contact the development team.
 
-### Completed
-- ✅ Project setup and configuration
-- ✅ Database connection and security setup
-- ✅ Basic Express server with middleware
-- ✅ Environment configuration
+---
 
-### In Progress
-- 🔄 Database models and schemas
-- 🔄 Authentication and authorization middleware
-- 🔄 API endpoints implementation
-- 🔄 Testing framework setup
-
-### Planned
-- 📋 Complete API implementation
-- 📋 Comprehensive testing suite
-- 📋 Documentation and examples
-- 📋 Performance optimization
+**Built with ❤️ for emergency response and community safety**
