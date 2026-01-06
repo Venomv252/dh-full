@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 // Set up test environment variables
 process.env.NODE_ENV = 'test';
-process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long';
+process.env.ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'; // 64 hex chars
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing';
 
 // Global test database instance
@@ -79,7 +79,7 @@ afterAll(async () => {
 /**
  * Global test timeout for property-based tests
  */
-jest.setTimeout(30000);
+jest.setTimeout(120000); // Increased to 2 minutes for property tests
 
 /**
  * Suppress console.log during tests (optional)

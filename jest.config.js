@@ -55,7 +55,7 @@ module.exports = {
   ],
   
   // Test timeout (important for property-based tests)
-  testTimeout: 30000,
+  testTimeout: 120000, // 2 minutes for property tests
   
   // Verbose output
   verbose: true,

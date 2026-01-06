@@ -1,0 +1,510 @@
+/**
+ * Property Test: JWT Authentication System
+ * 
+ * Feature: emergency-incident-platform
+ * Property 3: JWT authentication system
+ * Validates: Requirements 1.5, 13.2
+ * 
+ * This property test validates that the JWT authentication system correctly:
+ * - Generates valid JWT tokens for authenticated users
+ * - Validates JWT tokens and extracts user information
+ * - Handles token expiration and refresh functionality
+ * - Enforces role-based authentication
+ * - Manages token blacklisting for logout
+ */
+
+const fc = require('fast-check');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const User = require('../../src/models/User');
+const { 
+  generateUserToken, 
+  verifyJWTToken, 
+  refreshToken,
+  authenticate
+} = require('../../src/middleware/auth');
+const { login, logout, refresh, isTokenBlacklisted } = require('../../src/controllers/authController');
+const { USER_ROLES, USER_TYPES, ERROR_CODES } = require('../../src/config/constants');
+
+describe('Property Test: JWT Authentication System', () => {
+  
+  // Property test generators
+  const userRoleArb = fc.constantFrom(
+    USER_ROLES.USER,
+    USER_ROLES.POLICE, 
+    USER_ROLES.HOSPITAL,
+    USER_ROLES.ADMIN
+  );
+  
+  const validEmailArb = fc.emailAddress();
+  
+  const validPasswordArb = fc.string({ minLength: 8, maxLength: 50 })
+    .filter(pwd => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(pwd));
+  
+  const genderArb = fc.constantFrom('male', 'female', 'other');
+  
+  const emergencyContactArb = fc.record({
+    name: fc.string({ minLength: 2, maxLength: 50 }),
+    relation: fc.constantFrom('spouse', 'parent', 'sibling', 'child', 'friend', 'colleague', 'other'),
+    phone: fc.string({ minLength: 10, maxLength: 15 }).map(s => s.replace(/\D/g, '').padEnd(10, '0'))
+  });
+  
+  const addressArb = fc.record({
+    street: fc.string({ minLength: 5, maxLength: 100 }),
+    city: fc.string({ minLength: 2, maxLength: 50 }),
+    state: fc.string({ minLength: 2, maxLength: 50 }),
+    pincode: fc.string({ minLength: 5, maxLength: 10 }).map(s => s.replace(/\D/g, '').padEnd(6, '0'))
+  });
+  
+  const userDataArb = fc.record({
+    fullName: fc.string({ minLength: 2, maxLength: 100 }),
+    email: validEmailArb,
+    password: validPasswordArb,
+    role: userRoleArb,
+    gender: genderArb,
+    dob: fc.date({ min: new Date('1950-01-01'), max: new Date('2005-12-31') }),
+    phone: fc.string({ minLength: 10, maxLength: 15 }).map(s => s.replace(/\D/g, '').padEnd(10, '0')),
+    address: addressArb,
+    emergencyContacts: fc.array(emergencyContactArb, { minLength: 1, maxLength: 3 }),
+    isActive: fc.boolean()
+  }).chain(userData => {
+    // Add role-specific fields
+    const roleSpecificFields = {};
+    
+    if (userData.role === USER_ROLES.POLICE) {
+      roleSpecificFields.department = 'Police Department';
+      roleSpecificFields.jurisdiction = 'City District 1';
+      roleSpecificFields.badgeNumber = 'P' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    } else if (userData.role === USER_ROLES.HOSPITAL) {
+      roleSpecificFields.department = 'Emergency Medicine';
+      roleSpecificFields.licenseNumber = 'MD' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    }
+    
+    return fc.constant({ ...userData, ...roleSpecificFields });
+  });
+
+  /**
+   * Property 3.1: Token Generation Correctness
+   * For any valid user, generateUserToken should create a valid JWT token
+   * that contains correct user information and can be verified
+   */
+  test('Property 3.1: Token generation produces valid, verifiable tokens', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Create a mock user object
+        const mockUser = {
+          _id: 'user_' + Math.random().toString(36).substr(2, 9),
+          ...userData,
+          password: await bcrypt.hash(userData.password, 12)
+        };
+
+        // Generate token
+        const token = generateUserToken(mockUser);
+        
+        // Verify token structure
+        expect(typeof token).toBe('string');
+        expect(token.split('.').length).toBe(3); // JWT has 3 parts
+        
+        // Decode and verify token content
+        const jwtSecret = process.env.JWT_SECRET || 'development-secret-key';
+        const decoded = jwt.verify(token, jwtSecret);
+        
+        // Verify token contains correct user information
+        expect(decoded.userId).toBe(mockUser._id);
+        expect(decoded.userType).toBe(USER_TYPES.USER);
+        expect(decoded.role).toBe(mockUser.role);
+        expect(decoded.email).toBe(mockUser.email);
+        expect(decoded.iat).toBeDefined();
+        expect(decoded.exp).toBeDefined();
+        
+        // Verify token expiration is in the future
+        expect(decoded.exp * 1000).toBeGreaterThan(Date.now());
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.2: Token Verification Consistency
+   * For any valid token generated by the system, verifyJWTToken should
+   * successfully extract the same user information that was encoded
+   */
+  test('Property 3.2: Token verification extracts correct user information', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Skip inactive users for this test
+        if (!userData.isActive) return;
+        
+        // Create and save a real user for verification
+        const hashedPassword = await bcrypt.hash(userData.password, 12);
+        const user = new User({
+          ...userData,
+          password: hashedPassword
+        });
+        await user.save();
+        
+        // Generate token
+        const token = generateUserToken(user);
+        
+        // Verify token using the middleware function
+        const verifiedData = await verifyJWTToken(token);
+        
+        // Verify extracted information matches original user
+        expect(verifiedData.userId.toString()).toBe(user._id.toString());
+        expect(verifiedData.userType).toBe(USER_TYPES.USER);
+        expect(verifiedData.role).toBe(user.role);
+        expect(verifiedData.email).toBe(user.email);
+        expect(verifiedData.user).toBeDefined();
+        expect(verifiedData.user.isActive).toBe(true);
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.3: Role-Based Authentication Enforcement
+   * For any user with a specific role, the authentication system should
+   * correctly identify and enforce role-based access
+   */
+  test('Property 3.3: Role-based authentication is correctly enforced', async () => {
+    await fc.assert(
+      fc.asyncProperty(userRoleArb, validEmailArb, validPasswordArb, async (role, email, password) => {
+        // Create complete user data with role-specific fields
+        const baseUserData = {
+          fullName: 'Test User',
+          email: email,
+          password: password,
+          role: role,
+          gender: 'male',
+          dob: new Date('1990-01-01'),
+          phone: '1234567890',
+          address: {
+            street: '123 Test St',
+            city: 'Test City', 
+            state: 'Test State',
+            pincode: '12345'
+          },
+          emergencyContacts: [{
+            name: 'Emergency Contact',
+            relation: 'parent',
+            phone: '9876543210'
+          }],
+          isActive: true
+        };
+        
+        // Add role-specific fields
+        if (role === USER_ROLES.POLICE) {
+          baseUserData.department = 'Police Department';
+          baseUserData.jurisdiction = 'City District 1';
+          baseUserData.badgeNumber = 'P123456';
+        } else if (role === USER_ROLES.HOSPITAL) {
+          baseUserData.department = 'Emergency Medicine';
+          baseUserData.licenseNumber = 'MD123456';
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const user = new User({
+          ...baseUserData,
+          password: hashedPassword
+        });
+        await user.save();
+        
+        // Generate token
+        const token = generateUserToken(user);
+        
+        // Verify role is correctly encoded and extracted
+        const verifiedData = await verifyJWTToken(token);
+        expect(verifiedData.role).toBe(role);
+        
+        // Test authentication middleware with this token
+        const req = {
+          headers: { authorization: `Bearer ${token}` },
+          user: null,
+          isAuthenticated: false,
+          isUser: false,
+          isGuest: false
+        };
+        const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+        const next = jest.fn();
+        
+        await authenticate(req, res, next);
+        
+        // Verify authentication succeeded and role is correct
+        expect(req.isAuthenticated).toBe(true);
+        expect(req.isUser).toBe(true);
+        expect(req.user.role).toBe(role);
+        expect(next).toHaveBeenCalled();
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.4: Token Blacklisting for Logout
+   * For any valid token that gets blacklisted through logout,
+   * subsequent authentication attempts should fail
+   */
+  test('Property 3.4: Token blacklisting prevents reuse of logged-out tokens', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Skip inactive users
+        if (!userData.isActive) return;
+        
+        // Create and save user
+        const hashedPassword = await bcrypt.hash(userData.password, 12);
+        const user = new User({
+          ...userData,
+          password: hashedPassword
+        });
+        await user.save();
+        
+        // Generate token
+        const token = generateUserToken(user);
+        
+        // Verify token works initially
+        const initialVerification = await verifyJWTToken(token);
+        expect(initialVerification.userId.toString()).toBe(user._id.toString());
+        
+        // Simulate logout by calling logout controller
+        const logoutReq = {
+          headers: { authorization: `Bearer ${token}` }
+        };
+        const logoutRes = {
+          status: jest.fn().mockReturnThis(),
+          json: jest.fn()
+        };
+        const logoutNext = jest.fn();
+        
+        await logout(logoutReq, logoutRes, logoutNext);
+        
+        // Verify token is now blacklisted
+        expect(isTokenBlacklisted(token)).toBe(true);
+        
+        // Verify token verification now fails
+        await expect(verifyJWTToken(token)).rejects.toThrow('Token has been invalidated');
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.5: Login Process Integrity
+   * For any valid user credentials, the login process should generate
+   * a valid token and return correct user information
+   */
+  test('Property 3.5: Login process generates valid tokens for correct credentials', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Skip inactive users for login test
+        if (!userData.isActive) return;
+        
+        // Create and save user
+        const hashedPassword = await bcrypt.hash(userData.password, 12);
+        const user = new User({
+          ...userData,
+          password: hashedPassword
+        });
+        await user.save();
+        
+        // Simulate login request
+        const loginReq = {
+          body: {
+            email: userData.email,
+            password: userData.password,
+            userType: 'user'
+          }
+        };
+        const loginRes = {
+          status: jest.fn().mockReturnThis(),
+          json: jest.fn()
+        };
+        const loginNext = jest.fn();
+        
+        await login(loginReq, loginRes, loginNext);
+        
+        // Verify successful login response
+        expect(loginRes.status).toHaveBeenCalledWith(200);
+        expect(loginRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+              user: expect.objectContaining({
+                userId: user._id,
+                email: userData.email,
+                role: userData.role
+              }),
+              token: expect.any(String),
+              refreshToken: expect.any(String),
+              dashboardUrl: expect.any(String)
+            })
+          })
+        );
+        
+        // Extract and verify the generated token
+        const responseCall = loginRes.json.mock.calls[0][0];
+        const generatedToken = responseCall.data.token;
+        
+        // Verify token is valid and contains correct information
+        const verifiedData = await verifyJWTToken(generatedToken);
+        expect(verifiedData.userId.toString()).toBe(user._id.toString());
+        expect(verifiedData.email).toBe(userData.email);
+        expect(verifiedData.role).toBe(userData.role);
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.6: Token Refresh Functionality
+   * For any valid refresh token, the refresh process should generate
+   * a new valid access token with the same user information
+   */
+  test('Property 3.6: Token refresh generates new valid tokens', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Skip inactive users
+        if (!userData.isActive) return;
+        
+        // Create and save user
+        const hashedPassword = await bcrypt.hash(userData.password, 12);
+        const user = new User({
+          ...userData,
+          password: hashedPassword
+        });
+        await user.save();
+        
+        // Generate initial tokens
+        const originalToken = generateUserToken(user);
+        const refreshTokenValue = generateUserToken(user, '7d');
+        
+        // Simulate token refresh request
+        const refreshReq = {
+          body: { refreshToken: refreshTokenValue }
+        };
+        const refreshRes = {
+          status: jest.fn().mockReturnThis(),
+          json: jest.fn()
+        };
+        const refreshNext = jest.fn();
+        
+        await refresh(refreshReq, refreshRes, refreshNext);
+        
+        // Verify successful refresh response
+        expect(refreshRes.status).toHaveBeenCalledWith(200);
+        expect(refreshRes.json).toHaveBeenCalledWith(
+          expect.objectContaining({
+            success: true,
+            data: expect.objectContaining({
+              token: expect.any(String),
+              refreshToken: expect.any(String),
+              user: expect.objectContaining({
+                userId: user._id,
+                email: userData.email,
+                role: userData.role
+              })
+            })
+          })
+        );
+        
+        // Extract new token and verify it's different but valid
+        const responseCall = refreshRes.json.mock.calls[0][0];
+        const newToken = responseCall.data.token;
+        
+        expect(newToken).not.toBe(originalToken);
+        
+        // Verify new token contains correct user information
+        const verifiedData = await verifyJWTToken(newToken);
+        expect(verifiedData.userId.toString()).toBe(user._id.toString());
+        expect(verifiedData.email).toBe(userData.email);
+        expect(verifiedData.role).toBe(userData.role);
+        
+        // Verify old refresh token is now blacklisted
+        expect(isTokenBlacklisted(refreshTokenValue)).toBe(true);
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.7: Invalid Token Rejection
+   * For any invalid, expired, or malformed token, the authentication
+   * system should reject it with appropriate error handling
+   */
+  test('Property 3.7: Invalid tokens are consistently rejected', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.oneof(
+          fc.string({ minLength: 1, maxLength: 50 }).filter(s => !s.includes('.')), // Invalid format
+          fc.constant('invalid.token.format'), // Invalid JWT
+          fc.constant('malformed-jwt-token'), // Malformed token
+        ),
+        async (invalidToken) => {
+          // Skip empty tokens as they are handled differently
+          if (!invalidToken || invalidToken.trim() === '') return;
+          
+          // Test with authentication middleware
+          const req = {
+            headers: { authorization: `Bearer ${invalidToken}` },
+            user: null,
+            isAuthenticated: false,
+            isUser: false,
+            isGuest: false
+          };
+          const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+          };
+          const next = jest.fn();
+          
+          await authenticate(req, res, next);
+          
+          // Verify authentication failed
+          expect(req.isAuthenticated).toBe(false);
+          expect(res.status).toHaveBeenCalledWith(401);
+          expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+              success: false,
+              error: expect.objectContaining({
+                code: ERROR_CODES.INVALID_TOKEN
+              })
+            })
+          );
+          expect(next).not.toHaveBeenCalled();
+        }
+      ),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+  /**
+   * Property 3.8: Inactive User Token Rejection
+   * For any token belonging to an inactive user, authentication
+   * should fail even if the token is otherwise valid
+   */
+  test('Property 3.8: Tokens for inactive users are rejected', async () => {
+    await fc.assert(
+      fc.asyncProperty(userDataArb, async (userData) => {
+        // Create user (initially active)
+        const hashedPassword = await bcrypt.hash(userData.password, 12);
+        const user = new User({
+          ...userData,
+          password: hashedPassword,
+          isActive: true // Start as active
+        });
+        await user.save();
+        
+        // Generate token while user is active
+        const token = generateUserToken(user);
+        
+        // Deactivate user
+        user.isActive = false;
+        await user.save();
+        
+        // Attempt authentication with token from now-inactive user
+        await expect(verifyJWTToken(token)).rejects.toThrow('User account is deactivated');
+      }),
+      { numRuns: 100, timeout: 120000 }
+    );
+  }, 120000);
+
+});
