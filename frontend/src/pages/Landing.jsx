@@ -9,7 +9,12 @@ const Landing = () => {
   const navigate = useNavigate();
 
   const handleRoleLogin = (role) => {
-    // Navigate to role-specific login page
+    // For user role, redirect to v0.app interface
+    if (role === 'user') {
+      window.open('https://v0.app/chat/emergency-response-platform-jEQIpPoIFjS?ref=VB6N07', '_blank');
+      return;
+    }
+    // Navigate to role-specific login page for other roles
     navigate(`/login/${role}`);
   };
 
@@ -68,14 +73,17 @@ const Landing = () => {
               className="w-full bg-white hover:bg-gray-50 text-gray-900 font-semibold py-6 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
             >
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors relative">
                   <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
+                  <svg className="w-4 h-4 text-blue-600 absolute -top-1 -right-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Login as User</h3>
+                <h3 className="text-xl font-bold mb-2">User Interface</h3>
                 <p className="text-gray-600 text-sm text-center">
-                  Citizens and general public
+                  Access user dashboard
                 </p>
               </div>
             </button>
