@@ -62,7 +62,9 @@
       radial-gradient(circle at 75px 75px, rgba(59, 130, 246, 0.02) 1px, transparent 0);
     background-size: 100px 100px;
   }
-  
+}
+
+@layer utilities {
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
