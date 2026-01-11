@@ -1,53 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --color-emergency-50: #fef2f2;
-  --color-emergency-100: #fee2e2;
-  --color-emergency-200: #fecaca;
-  --color-emergency-300: #fca5a5;
-  --color-emergency-400: #f87171;
-  --color-emergency-500: #ef4444;
-  --color-emergency-600: #dc2626;
-  --color-emergency-700: #b91c1c;
-  --color-emergency-800: #991b1b;
-  --color-emergency-900: #7f1d1d;
-  
-  --color-police-50: #eff6ff;
-  --color-police-100: #dbeafe;
-  --color-police-200: #bfdbfe;
-  --color-police-300: #93c5fd;
-  --color-police-400: #60a5fa;
-  --color-police-500: #3b82f6;
-  --color-police-600: #2563eb;
-  --color-police-700: #1d4ed8;
-  --color-police-800: #1e40af;
-  --color-police-900: #1e3a8a;
-  
-  --color-hospital-50: #f0fdf4;
-  --color-hospital-100: #dcfce7;
-  --color-hospital-200: #bbf7d0;
-  --color-hospital-300: #86efac;
-  --color-hospital-400: #4ade80;
-  --color-hospital-500: #22c55e;
-  --color-hospital-600: #16a34a;
-  --color-hospital-700: #15803d;
-  --color-hospital-800: #166534;
-  --color-hospital-900: #14532d;
-  
-  --animate-fade-in: fadeIn 0.5s ease-in-out;
-  --animate-slide-up: slideUp 0.3s ease-out;
-  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-
-@keyframes slideUp {
-  0% { transform: translateY(10px); opacity: 0; }
-  100% { transform: translateY(0); opacity: 1; }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {
@@ -109,4 +62,26 @@
       radial-gradient(circle at 75px 75px, rgba(59, 130, 246, 0.02) 1px, transparent 0);
     background-size: 100px 100px;
   }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
 }

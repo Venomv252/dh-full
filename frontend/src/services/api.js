@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Environment configuration
-const isDevelopment = process.env.VITE_NODE_ENV === 'development';
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:3000/api';
+const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development' || import.meta.env.DEV;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // Logging utility
 const logger = {
